@@ -3,7 +3,7 @@
 SOURCE  := Cargo.toml $(wildcard src/*.rs)
 TARGETS := \
 	x86_64-unknown-linux-musl \
-	x86_64-apple-darwin
+	aarch64-unknown-linux-musl
 
 default: build
 
@@ -15,7 +15,7 @@ target/debug/flightctl: $(SOURCE)
 dist: $(foreach target,$(TARGETS),target/$(target)/release/flightctl)
 
 target/%/release/flightctl: $(SOURCE)
-	cargo build --release --target "$*"
+	cross build --locked --release --target "$*"
 
 clean:
 	rm -rf target
