@@ -1,8 +1,11 @@
 use config::Config;
+use selector::Selector;
 use structopt::StructOpt;
 
 mod commands;
 mod config;
+mod selection;
+mod selector;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "flightctl", about = "control a cloud workspace")]
@@ -12,10 +15,21 @@ struct Opt {
 
     #[structopt(subcommand)]
     cmd: Option<Command>,
+
+    #[structopt(flatten)]
+    selector: Selector,
 }
 
 #[derive(Debug, StructOpt)]
 enum Command {
+    /// Run a console command for a release
+    Console {
+        cmd: Vec<String>,
+
+        #[structopt(flatten)]
+        selector: Selector,
+    },
+
     /// View information about this workspace
     View {
         #[structopt(subcommand)]
@@ -53,6 +67,10 @@ fn main() -> anyhow::Result<()> {
     }
 
     match opt.cmd {
+        Some(Command::Console { cmd, selector }) => {
+            let selection = opt.selector.merge(selector).apply(&config)?;
+            commands::console::run(selection, cmd)
+        }
         Some(Command::View {
             cmd: ViewCommand::Applications,
         }) => commands::view::applications(config),
@@ -69,7 +87,7 @@ fn main() -> anyhow::Result<()> {
             cmd: ViewCommand::Releases,
         }) => commands::view::releases(config),
         None => {
-            Opt::clap().print_help().unwrap();
+            Opt::clap().print_help()?;
             println!("");
             Ok(())
         }
