@@ -1,4 +1,4 @@
-use super::super::config::Config;
+use crate::flightctl::Config;
 
 pub fn applications(config: Config) -> anyhow::Result<()> {
     for application in config.applications {

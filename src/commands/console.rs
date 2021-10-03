@@ -1,4 +1,4 @@
-use super::super::selection::Selection;
+use crate::flightctl::Selection;
 
 pub fn run(selection: Selection, cmd: Vec<String>) -> anyhow::Result<()> {
     println!(

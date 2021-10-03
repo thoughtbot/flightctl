@@ -1,11 +1,8 @@
-use config::Config;
-use selector::Selector;
+use flightctl::{Config, Selector};
 use structopt::StructOpt;
 
 mod commands;
-mod config;
-mod selection;
-mod selector;
+mod flightctl;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "flightctl", about = "control a cloud workspace")]

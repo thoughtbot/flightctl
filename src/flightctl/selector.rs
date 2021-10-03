@@ -1,5 +1,4 @@
-use super::config::{Application, Config, Release};
-use super::selection::Selection;
+use super::{Application, Config, Release, Selection};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
