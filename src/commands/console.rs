@@ -30,7 +30,7 @@ pub fn run_default(config: &Config, release: &Release) -> anyhow::Result<()> {
     }
 }
 
-pub fn run_command(config: &Config, release: &Release, cmd: Vec<String>) -> anyhow::Result<()> {
+pub fn run_command(config: &Config, release: &Release, cmd: &Vec<String>) -> anyhow::Result<()> {
     let application = config.find_application(&release)?;
 
     match &application.config {

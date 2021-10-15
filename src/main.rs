@@ -1,4 +1,4 @@
-use flightctl::{ConfigFile, Selector};
+use flightctl::{Config, ConfigFile, Release, Selector};
 use structopt::StructOpt;
 
 mod commands;
@@ -58,6 +58,17 @@ enum ViewCommand {
     Releases,
 }
 
+fn preflight<'a>(
+    config: &'a Config,
+    opt: &Opt,
+    selector: &Selector,
+) -> anyhow::Result<&'a Release> {
+    let release = opt.selector.merge(selector).apply(&config)?;
+    flightctl::authorize::run(&config, &release)?;
+    flightctl::context::prepare(&config, &release)?;
+    Ok(release)
+}
+
 fn main() -> anyhow::Result<()> {
     let opt = Opt::from_args();
     let config_file = ConfigFile::find()?;
@@ -70,17 +81,16 @@ fn main() -> anyhow::Result<()> {
     }
 
     match opt.cmd {
-        Some(Command::Console { selector }) => {
-            let selection = opt.selector.merge(selector).apply(&config)?;
-            flightctl::authorize::run(&config, &selection)?;
-            flightctl::context::prepare(&config, &selection)?;
-            commands::console::run_default(&config, selection)
+        Some(Command::Console { ref selector }) => {
+            let release = preflight(&config, &opt, &selector)?;
+            commands::console::run_default(&config, release)
         }
-        Some(Command::Run { cmd, selector }) => {
-            let selection = opt.selector.merge(selector).apply(&config)?;
-            flightctl::authorize::run(&config, &selection)?;
-            flightctl::context::prepare(&config, &selection)?;
-            commands::console::run_command(&config, selection, cmd)
+        Some(Command::Run {
+            ref cmd,
+            ref selector,
+        }) => {
+            let release = preflight(&config, &opt, &selector)?;
+            commands::console::run_command(&config, release, cmd)
         }
         Some(Command::View {
             cmd: ViewCommand::Applications,

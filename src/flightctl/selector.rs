@@ -38,10 +38,16 @@ impl Selector {
         }
     }
 
-    pub fn merge(self, other: Selector) -> Selector {
+    pub fn merge(&self, other: &Selector) -> Selector {
         Selector {
-            application: other.application.or(self.application),
-            environment: other.environment.or(self.environment),
+            application: other
+                .application
+                .clone()
+                .or_else(|| self.application.clone()),
+            environment: other
+                .environment
+                .clone()
+                .or_else(|| self.environment.clone()),
         }
     }
 
