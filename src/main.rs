@@ -25,6 +25,13 @@ enum Command {
         selector: Selector,
     },
 
+    /// Run a kubectl command for a release
+    Kubectl {
+        cmd: Vec<String>,
+        #[structopt(flatten)]
+        selector: Selector,
+    },
+
     /// Run a container command for a release
     Run {
         cmd: Vec<String>,
@@ -84,6 +91,13 @@ fn main() -> anyhow::Result<()> {
         Some(Command::Console { ref selector }) => {
             let release = preflight(&config, &opt, &selector)?;
             commands::console::run_default(&config, release)
+        }
+        Some(Command::Kubectl {
+            ref cmd,
+            ref selector,
+        }) => {
+            let release = preflight(&config, &opt, &selector)?;
+            commands::kubectl::run(&config, release, cmd)
         }
         Some(Command::Run {
             ref cmd,

@@ -43,6 +43,19 @@ impl KubeClient {
             name: String::from(pod_name.trim()),
         })
     }
+
+    pub fn run_command<S>(&self, command: &Vec<S>) -> anyhow::Result<()>
+    where
+        S: AsRef<str>,
+    {
+        kubectl::run_print(
+            &[
+                vec!["--context", &self.context],
+                command.iter().map(|s| s.as_ref()).collect(),
+            ]
+            .concat(),
+        )
+    }
 }
 
 impl Selector {
