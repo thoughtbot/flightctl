@@ -81,6 +81,7 @@ pub enum ApplicationConfig {
 pub enum Console {
     Exec {
         command: Vec<String>,
+        container: String,
         selector: HashMap<String, String>,
     },
 }
@@ -149,6 +150,16 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn find_application(&self, release: &Release) -> anyhow::Result<&Application> {
+        self.applications
+            .iter()
+            .find(|&application| &application.name == &release.application)
+            .ok_or(anyhow::Error::msg(format!(
+                "Release {} uses application {}, which isn't defined",
+                release.name, release.application
+            )))
+    }
+
     pub fn find_auth(&self, context: &Context) -> anyhow::Result<&Auth> {
         self.auth
             .iter()
