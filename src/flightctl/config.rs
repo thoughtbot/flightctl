@@ -148,13 +148,35 @@ pub struct Config {
     pub releases: Vec<Release>,
 }
 
+impl Config {
+    pub fn find_auth(&self, context: &Context) -> anyhow::Result<&Auth> {
+        self.auth
+            .iter()
+            .find(|&auth| &auth.name == &context.auth)
+            .ok_or(anyhow::Error::msg(format!(
+                "Context {} uses auth {}, which isn't defined",
+                context.name, context.auth
+            )))
+    }
+
+    pub fn find_context(&self, release: &Release) -> anyhow::Result<&Context> {
+        self.contexts
+            .iter()
+            .find(|&context| &context.name == &release.context)
+            .ok_or(anyhow::Error::msg(format!(
+                "Release {} uses context {}, which isn't defined",
+                release.name, release.context
+            )))
+    }
+}
+
 #[derive(Debug)]
 pub struct ConfigFile {
     pub config: Config,
     pub path: PathBuf,
 }
 
-impl Config {
+impl ConfigFile {
     pub fn find() -> anyhow::Result<ConfigFile> {
         let current_dir = std::env::current_dir()?;
         match find_config(current_dir) {

@@ -1,9 +1,9 @@
-use crate::flightctl::Selection;
+use crate::flightctl::Release;
 
-pub fn run(selection: Selection, cmd: Vec<String>) -> anyhow::Result<()> {
+pub fn run(release: &Release, cmd: Vec<String>) -> anyhow::Result<()> {
     println!(
         "Running console command: {:?} in context {}",
-        cmd, selection.context
+        cmd, release.context
     );
     Ok(())
 }

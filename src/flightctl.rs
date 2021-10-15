@@ -1,7 +1,8 @@
 mod config;
-mod selection;
 mod selector;
 
+pub mod authorize;
+pub mod aws;
+
 pub use config::*;
-pub use selection::*;
 pub use selector::*;

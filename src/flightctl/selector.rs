@@ -1,4 +1,4 @@
-use super::{Application, Config, Release, Selection};
+use super::{Application, Config, Release};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -11,9 +11,31 @@ pub struct Selector {
 }
 
 impl Selector {
-    pub fn apply<'a>(self, config: &'a Config) -> anyhow::Result<Selection<'a>> {
-        let context = self.context(&config)?;
-        Ok(Selection { context: context })
+    pub fn apply(self, config: &Config) -> anyhow::Result<&Release> {
+        let application = self.application(&config)?;
+
+        match &self.environment {
+            Some(name) => {
+                for release in &config.releases {
+                    if &release.environment == name && release.application == application.name {
+                        return Ok(release);
+                    }
+                }
+                Err(anyhow::Error::msg(
+                    "No release found for that application and environment",
+                ))
+            }
+            None => {
+                if config.releases.len() == 1 {
+                    Ok(&config.releases[0])
+                } else {
+                    Err(anyhow::Error::msg(format!(
+                        "More than one release for application {}",
+                        application.name,
+                    )))
+                }
+            }
+        }
     }
 
     pub fn merge(self, other: Selector) -> Selector {
@@ -41,37 +63,5 @@ impl Selector {
                 }
             }
         }
-    }
-
-    fn release<'a>(&self, config: &'a Config) -> anyhow::Result<&'a Release> {
-        let application = self.application(&config)?;
-
-        match &self.environment {
-            Some(name) => {
-                for release in &config.releases {
-                    if &release.environment == name && release.application == application.name {
-                        return Ok(release);
-                    }
-                }
-                Err(anyhow::Error::msg(
-                    "No release found for that application and environment",
-                ))
-            }
-            None => {
-                if config.releases.len() == 1 {
-                    Ok(&config.releases[0])
-                } else {
-                    Err(anyhow::Error::msg(format!(
-                        "More than one release for application {}",
-                        application.name,
-                    )))
-                }
-            }
-        }
-    }
-
-    fn context<'a>(&self, config: &'a Config) -> anyhow::Result<&'a String> {
-        let release = self.release(&config)?;
-        Ok(&release.context)
     }
 }

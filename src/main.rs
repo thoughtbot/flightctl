@@ -1,4 +1,4 @@
-use flightctl::{Config, Selector};
+use flightctl::{ConfigFile, Selector};
 use structopt::StructOpt;
 
 mod commands;
@@ -54,7 +54,7 @@ enum ViewCommand {
 
 fn main() -> anyhow::Result<()> {
     let opt = Opt::from_args();
-    let config_file = Config::find()?;
+    let config_file = ConfigFile::find()?;
     let config = config_file.config;
 
     if opt.debug {
@@ -66,6 +66,7 @@ fn main() -> anyhow::Result<()> {
     match opt.cmd {
         Some(Command::Console { cmd, selector }) => {
             let selection = opt.selector.merge(selector).apply(&config)?;
+            flightctl::authorize::run(&config, &selection)?;
             commands::console::run(selection, cmd)
         }
         Some(Command::View {
