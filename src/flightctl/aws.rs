@@ -1,5 +1,12 @@
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::process::{Command, ExitStatus, Output};
+
+#[derive(Debug, Deserialize)]
+pub struct EksCluster {
+    pub endpoint: String,
+    pub cert: String,
+}
 
 pub fn profile_exists(profile: &str) -> anyhow::Result<bool> {
     let result = run_aws_cli(&["configure", "list-profiles"])?;
@@ -32,6 +39,23 @@ pub fn sso_login(profile: &str) -> anyhow::Result<()> {
     verify_exit(&args, status)
 }
 
+pub fn get_eks_cluster(profile: &str, region: &str, name: &str) -> anyhow::Result<EksCluster> {
+    let output = run_aws_cli(&[
+        "--profile",
+        profile,
+        "--region",
+        region,
+        "eks",
+        "describe-cluster",
+        "--name",
+        name,
+        "--query",
+        "cluster.{endpoint:endpoint,cert:certificateAuthority.data}",
+    ])?;
+    let cluster = serde_yaml::from_slice(&output.stdout)?;
+    Ok(cluster)
+}
+
 fn run_aws_cli(args: &[&str]) -> anyhow::Result<Output> {
     let output = aws_cli(args).output()?;
     match verify_exit(&args, output.status) {
@@ -54,7 +78,7 @@ fn verify_exit(args: &[&str], status: ExitStatus) -> anyhow::Result<()> {
     } else {
         let command: Vec<&str> = args.to_vec();
         Err(anyhow::Error::msg(format!(
-            "{}: Command exited unsuccessfully (status code {})",
+            "aws {}: Command exited unsuccessfully (status code {})",
             command.join(" "),
             status
                 .code()

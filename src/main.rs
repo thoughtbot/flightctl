@@ -67,6 +67,7 @@ fn main() -> anyhow::Result<()> {
         Some(Command::Console { cmd, selector }) => {
             let selection = opt.selector.merge(selector).apply(&config)?;
             flightctl::authorize::run(&config, &selection)?;
+            flightctl::context::prepare(&config, &selection)?;
             commands::console::run(selection, cmd)
         }
         Some(Command::View {

@@ -45,7 +45,7 @@ impl fmt::Display for Cluster {
 #[derive(Debug, Deserialize)]
 #[serde(tag = "provider", content = "params", rename_all = "kebab-case")]
 pub enum ClusterConfig {
-    Eks { name: String },
+    Eks { name: String, region: String },
 }
 
 #[derive(Debug, Deserialize)]
@@ -156,6 +156,16 @@ impl Config {
             .ok_or(anyhow::Error::msg(format!(
                 "Context {} uses auth {}, which isn't defined",
                 context.name, context.auth
+            )))
+    }
+
+    pub fn find_cluster(&self, context: &Context) -> anyhow::Result<&Cluster> {
+        self.clusters
+            .iter()
+            .find(|&cluster| &cluster.name == &context.cluster)
+            .ok_or(anyhow::Error::msg(format!(
+                "Context {} uses cluster {}, which isn't defined",
+                context.name, context.cluster
             )))
     }
 
