@@ -19,8 +19,14 @@ struct Opt {
 
 #[derive(Debug, StructOpt)]
 enum Command {
-    /// Run a console command for a release
+    /// Run a console for a release
     Console {
+        #[structopt(flatten)]
+        selector: Selector,
+    },
+
+    /// Run a container command for a release
+    Run {
         cmd: Vec<String>,
 
         #[structopt(flatten)]
@@ -64,11 +70,17 @@ fn main() -> anyhow::Result<()> {
     }
 
     match opt.cmd {
-        Some(Command::Console { cmd, selector }) => {
+        Some(Command::Console { selector }) => {
             let selection = opt.selector.merge(selector).apply(&config)?;
             flightctl::authorize::run(&config, &selection)?;
             flightctl::context::prepare(&config, &selection)?;
-            commands::console::run(&config, selection, cmd)
+            commands::console::run_default(&config, selection)
+        }
+        Some(Command::Run { cmd, selector }) => {
+            let selection = opt.selector.merge(selector).apply(&config)?;
+            flightctl::authorize::run(&config, &selection)?;
+            flightctl::context::prepare(&config, &selection)?;
+            commands::console::run_command(&config, selection, cmd)
         }
         Some(Command::View {
             cmd: ViewCommand::Applications,
