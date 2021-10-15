@@ -1,12 +1,12 @@
 use super::aws;
 use super::config::{Auth, AuthConfig, Cluster, ClusterConfig, Config, Context, Release};
-use super::kubectl;
+use super::kubeconfig;
 use base64;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
 pub fn prepare(config: &Config, release: &Release) -> anyhow::Result<()> {
-    let context_exists = kubectl::context_exists(&release.context)?;
+    let context_exists = kubeconfig::context_exists(&release.context)?;
 
     if context_exists {
         Ok(())
@@ -20,7 +20,7 @@ fn create_context(context: &Context, config: &Config) -> anyhow::Result<()> {
     ensure_auth(&context, &config)?;
     ensure_cluster(&context, &config)?;
     eprintln!("Creating Kubernetes context: {}", context.name);
-    kubectl::create_context(
+    kubeconfig::create_context(
         &context.name,
         &context.auth,
         &context.cluster,
@@ -29,7 +29,7 @@ fn create_context(context: &Context, config: &Config) -> anyhow::Result<()> {
 }
 
 fn ensure_auth(context: &Context, config: &Config) -> anyhow::Result<()> {
-    let exists = kubectl::auth_exists(&context.auth)?;
+    let exists = kubeconfig::auth_exists(&context.auth)?;
 
     if exists {
         Ok(())
@@ -48,7 +48,7 @@ fn create_auth(auth: &Auth, cluster: &Cluster) -> anyhow::Result<()> {
                     "Setting Kubernetes credentials for EKS cluster: {} as {} in {}",
                     name, auth.name, region
                 );
-                kubectl::create_auth(
+                kubeconfig::create_auth(
                     &auth.name,
                     &[
                         "--exec-api-version",
@@ -77,7 +77,7 @@ fn create_auth(auth: &Auth, cluster: &Cluster) -> anyhow::Result<()> {
 }
 
 fn ensure_cluster(context: &Context, config: &Config) -> anyhow::Result<()> {
-    let exists = kubectl::cluster_exists(&context.cluster)?;
+    let exists = kubeconfig::cluster_exists(&context.cluster)?;
 
     if exists {
         Ok(())
@@ -105,7 +105,7 @@ fn create_cluster(cluster: &Cluster, auth: &Auth) -> anyhow::Result<()> {
                 "Setting Kubernetes cluster details for cluster: {}",
                 cluster.name
             );
-            kubectl::create_cluster(
+            kubeconfig::create_cluster(
                 &cluster.name,
                 &[
                     "--embed-certs",
