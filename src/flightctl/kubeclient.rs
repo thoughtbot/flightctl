@@ -44,6 +44,17 @@ impl KubeClient {
         })
     }
 
+    pub fn get_workloads(&self, selector: Selector) -> anyhow::Result<()> {
+        kubectl::run_print(&[
+            "--context",
+            &self.context,
+            "get",
+            "deploy",
+            "--selector",
+            &selector.to_string(),
+        ])
+    }
+
     pub fn run_command<S>(&self, command: &Vec<S>) -> anyhow::Result<()>
     where
         S: AsRef<str>,
