@@ -38,6 +38,7 @@ enum Command {
         selector: Selector,
     },
 
+    /// List processes running for a release
     Ps {
         #[structopt(flatten)]
         selector: Selector,
