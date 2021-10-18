@@ -84,7 +84,7 @@ jobs:
     - name: Build release binary
       run: cross build --release --target "${{ matrix.target }}"
 
-    - name: Build release directory
+    - name: Build release archive
       shell: bash
       run: |
         archive="flightctl-${{ needs.create-release.outputs.release_version }}-${{ matrix.target }}"
@@ -92,19 +92,13 @@ jobs:
         cp target/${{ matrix.target }}/release/flightctl "dist/$archive"
         cp README.md LICENSE "dist/$archive"
 
-    - name: Build release archive (Unix)
-      if: matrix.build != 'windows'
-      shell: bash
-      run: |
-        tar czf "$archive.tar.gz" "dist/$archive"
-        echo "ASSET=$archive.tar.gz" >> $GITHUB_ENV
-
-    - name: Build release archive (Windows)
-      if: matrix.build == 'windows'
-      shell: bash
-      run: |
-        7z a "$archive.zip" "dist/$archive"
-        echo "ASSET=$archive.zip" >> $GITHUB_ENV
+        if [ "${{ matrix.os }}" = "windows-2019" ]; then
+          7z a "$archive.zip" "dist/$archive"
+          echo "ASSET=$archive.zip" >> $GITHUB_ENV
+        else
+          tar czf "$archive.tar.gz" "dist/$archive"
+          echo "ASSET=$archive.tar.gz" >> $GITHUB_ENV
+        fi
 
     - name: Upload release archive
       uses: actions/upload-release-asset@v1.0.1
