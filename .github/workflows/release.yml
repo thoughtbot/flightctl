@@ -88,15 +88,15 @@ jobs:
       shell: bash
       run: |
         archive="flightctl-${{ needs.create-release.outputs.release_version }}-${{ matrix.target }}"
-        mkdir -p "dist/$archive"
-        cp target/${{ matrix.target }}/release/flightctl "dist/$archive"
-        cp README.md LICENSE "dist/$archive"
+        mkdir -p "$archive"
+        cp target/${{ matrix.target }}/release/flightctl "$archive"
+        cp README.md LICENSE "$archive"
 
         if [ "${{ matrix.os }}" = "windows-2019" ]; then
-          7z a "$archive.zip" "dist/$archive"
+          7z a "$archive.zip" "$archive"
           echo "ASSET=$archive.zip" >> $GITHUB_ENV
         else
-          tar czf "$archive.tar.gz" "dist/$archive"
+          tar czf "$archive.tar.gz" "$archive"
           echo "ASSET=$archive.tar.gz" >> $GITHUB_ENV
         fi
 
