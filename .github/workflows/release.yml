@@ -63,8 +63,6 @@ jobs:
           target: x86_64-pc-windows-msvc
           arch: windows
     runs-on: ${{ matrix.os }}
-    env:
-      FLIGHTCTL_VERSION: TEST-0.0.0
     steps:
 
     - name: Checkout repository
