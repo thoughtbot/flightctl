@@ -1,0 +1,12 @@
+name: build
+on:
+  pull_request:
+  push:
+    branches:
+    - main
+    - workflows
+jobs:
+  build:
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
