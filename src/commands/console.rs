@@ -32,7 +32,7 @@ pub fn run_command(config: &Config, release: &Release, cmd: &Vec<String>) -> any
                     let console_selector =
                         base_selector.extend(&kubeclient::Selector::new(selector.clone()));
                     let pod = client.get_available_pod(console_selector)?;
-                    pod.exec(&container, &cmd)?;
+                    client.exec(&pod, container, cmd)?;
                     Ok(())
                 }
                 None => Err(anyhow::Error::msg(format!(

@@ -19,6 +19,12 @@ struct Opt {
 
 #[derive(Debug, StructOpt)]
 enum Command {
+    /// Fetch configuration variables for a release
+    Config {
+        #[structopt(flatten)]
+        selector: Selector,
+    },
+
     /// Run a console for a release
     Console {
         #[structopt(flatten)]
@@ -93,6 +99,10 @@ fn main() -> anyhow::Result<()> {
     }
 
     match opt.cmd {
+        Some(Command::Config { ref selector }) => {
+            let release = preflight(&config, &opt, &selector)?;
+            commands::config::print(&config, release)
+        }
         Some(Command::Console { ref selector }) => {
             let release = preflight(&config, &opt, &selector)?;
             commands::console::run_default(&config, release)

@@ -7,6 +7,7 @@ pub mod context;
 pub mod kubeclient;
 pub mod kubeconfig;
 pub mod kubectl;
+pub mod kubeenv;
 
 pub use config::*;
 pub use selector::*;

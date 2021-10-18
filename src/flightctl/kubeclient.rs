@@ -1,15 +1,10 @@
 use super::kubectl;
+use k8s_openapi::api::core::v1 as k8s;
 use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct KubeClient {
     context: String,
-}
-
-#[derive(Debug)]
-pub struct Pod<'a> {
-    context: &'a String,
-    name: String,
 }
 
 #[derive(Debug)]
@@ -24,7 +19,7 @@ pub fn new(context: &str) -> KubeClient {
 }
 
 impl KubeClient {
-    pub fn get_available_pod(&self, selector: Selector) -> anyhow::Result<Pod> {
+    pub fn get_available_pod(&self, selector: Selector) -> anyhow::Result<k8s::Pod> {
         let output = kubectl::run_get_output(&[
             "--context",
             &self.context,
@@ -38,10 +33,8 @@ impl KubeClient {
             "name",
         ])?;
         let pod_name = String::from_utf8(output.stdout)?;
-        Ok(Pod {
-            context: &self.context,
-            name: String::from(pod_name.trim()),
-        })
+        let pod = self.fetch_resource(&pod_name.trim_end())?;
+        Ok(pod)
     }
 
     pub fn get_workloads(&self, selector: Selector) -> anyhow::Result<()> {
@@ -55,6 +48,30 @@ impl KubeClient {
         ])
     }
 
+    pub fn exec<S>(&self, pod: &k8s::Pod, container: &str, command: &Vec<S>) -> anyhow::Result<()>
+    where
+        S: AsRef<str>,
+    {
+        let pod_name = pod.metadata.name.as_deref();
+        kubectl::run_print(
+            &[
+                vec![
+                    "--context",
+                    &self.context,
+                    "exec",
+                    "--stdin",
+                    "--tty",
+                    &pod_name.unwrap_or_default(),
+                    "--container",
+                    container,
+                    "--",
+                ],
+                command.iter().map(|s| s.as_ref()).collect(),
+            ]
+            .concat(),
+        )
+    }
+
     pub fn run_command<S>(&self, command: &Vec<S>) -> anyhow::Result<()>
     where
         S: AsRef<str>,
@@ -66,6 +83,23 @@ impl KubeClient {
             ]
             .concat(),
         )
+    }
+
+    pub fn fetch_resource<T>(&self, resource: &str) -> anyhow::Result<T>
+    where
+        T: for<'de> serde::Deserialize<'de>,
+    {
+        let output = kubectl::run_get_output(&[
+            "--context",
+            &self.context,
+            "get",
+            &resource,
+            "--output",
+            "yaml",
+        ])?;
+        let yaml = String::from_utf8(output.stdout)?;
+        let result = serde_yaml::from_str::<T>(&yaml)?;
+        Ok(result)
     }
 }
 
@@ -91,30 +125,5 @@ impl Selector {
             .map(|(key, value)| format!("{}={}", key, value))
             .collect::<Vec<String>>()
             .join(",")
-    }
-}
-
-impl Pod<'_> {
-    pub fn exec<S>(&self, container: &str, command: &Vec<S>) -> anyhow::Result<()>
-    where
-        S: AsRef<str>,
-    {
-        kubectl::run_print(
-            &[
-                vec![
-                    "--context",
-                    &self.context,
-                    "exec",
-                    "--stdin",
-                    "--tty",
-                    &self.name,
-                    "--container",
-                    container,
-                    "--",
-                ],
-                command.iter().map(|s| s.as_ref()).collect(),
-            ]
-            .concat(),
-        )
     }
 }
