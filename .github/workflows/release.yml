@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.release.outputs.upload_url }}
-      flightctl_version: ${{ env.FLIGHTCTL_VERSION }}
+      release_version: ${{ env.FLIGHTCTL_VERSION }}
     steps:
       - name: Get the release version from the tag
         shell: bash
@@ -87,24 +87,24 @@ jobs:
     - name: Build release directory
       shell: bash
       run: |
-        dist_dir="dist/flightctl-${{ env.FLIGHTCTL_VERSION }}"
-        mkdir -p "$dist_dir"
-        cp target/${{ matrix.target }}/release/flightctl "$dist_dir"
-        cp README.md LICENSE "$dist_dir"
+        archive="flightctl-${{ needs.create-release.outputs.release_version }}-${{ matrix.target }}"
+        mkdir -p "dist/$archive"
+        cp target/${{ matrix.target }}/release/flightctl "dist/$archive"
+        cp README.md LICENSE "dist/$archive"
 
     - name: Build release archive (Unix)
       if: matrix.build != 'windows'
       shell: bash
       run: |
-        tar czf "flightctl-${{ env.FLIGHTCTL_VERSION }}.tar.gz" "dist/flightctl-$${{ env.FLIGHTCTL_VERSION }}"
-        echo "ASSET=flightctl-${{ env.FLIGHTCTL_VERSION }}.tar.gz" >> $GITHUB_ENV
+        tar czf "$archive.tar.gz" "dist/$archive"
+        echo "ASSET=$archive.tar.gz" >> $GITHUB_ENV
 
     - name: Build release archive (Windows)
       if: matrix.build == 'windows'
       shell: bash
       run: |
-        7z a "flightctl-${{ env.FLIGHTCTL_VERSION }}.zip" "dist/flightctl-${{ env.FLIGHTCTL_VERSION }}"
-        echo "ASSET=flightctl-${{ env.FLIGHTCTL_VERSION }}.zip" >> $GITHUB_ENV
+        7z a "$archive.zip" "dist/$archive"
+        echo "ASSET=$archive.zip" >> $GITHUB_ENV
 
     - name: Upload release archive
       uses: actions/upload-release-asset@v1.0.1
