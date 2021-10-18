@@ -1,6 +1,6 @@
 # flightctl
 
-Client for interacting with cloud workspaces.
+Client for interacting with Mission Control workspaces.
 
 ## User Commands
 

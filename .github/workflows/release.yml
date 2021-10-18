@@ -1,0 +1,118 @@
+name: release
+on:
+  push:
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
+jobs:
+  create-release:
+    name: create-release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      flightctl_version: ${{ env.FLIGHTCTL_VERSION }}
+    steps:
+      - name: Get the release version from the tag
+        shell: bash
+        run: |
+          echo "FLIGHTCTL_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Create GitHub release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.FLIGHTCTL_VERSION }}
+          release_name: ${{ env.FLIGHTCTL_VERSION }}
+
+  build-release:
+    name: build
+    needs:
+    - create-release
+    strategy:
+      matrix:
+        build:
+        - linux-x86_64
+        - linux-aarch64
+        - macos-x86_64
+        - macos-aarch64
+        - windows
+        include:
+        - build: linux-x86_64
+          os: ubuntu-18.04
+          toolchain: stable
+          target: x86_64-unknown-linux-musl
+          arch: x86_64
+        - build: linux-aarch64
+          os: ubuntu-18.04
+          toolchain: stable
+          target: aarch64-unknown-linux-musl
+          arch: aarch64
+        - build: macos-x86_64
+          os: macos-11
+          toolchain: stable
+          target: x86_64-apple-darwin
+          arch: x86_64
+        - build: macos-aarch64
+          os: macos-11
+          toolchain: stable
+          target: aarch64-apple-darwin
+          arch: aarch64
+        - build: windows
+          os: windows-2019
+          toolchain: stable
+          target: x86_64-pc-windows-msvc
+          arch: windows
+    runs-on: ${{ matrix.os }}
+    env:
+      FLIGHTCTL_VERSION: TEST-0.0.0
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.toolchain }}
+        target: ${{ matrix.target }}
+        profile: minimal
+        override: true
+
+    - name: Install Cross
+      shell: bash
+      run: cargo install cross
+
+    - name: Build release binary
+      run: cross build --release --target "${{ matrix.target }}"
+
+    - name: Build release directory
+      shell: bash
+      run: |
+        dist_dir="dist/flightctl-$FLIGHTCTL_VERSION"
+        mkdir -p "$dist_dir"
+        cp target/${{ matrix.target }}/release/flightctl "$dist_dir"
+        cp README.md LICENSE "$dist_dir"
+
+    - name: Build release archive (Unix)
+      if: matrix.build != 'windows'
+      shell: bash
+      run: |
+        tar czf "flightctl-$FLIGHTCTL_VERSION.tar.gz" "dist/flightctl-$FLIGHTCTL_VERSION"
+        echo "ASSET=flightctl-$FLIGHTCTL_VERSION.tar.gz" >> $GITHUB_ENV
+
+    - name: Build release archive (Windows)
+      if: matrix.build == 'windows'
+      shell: bash
+      run: |
+        7z a "flightctl-$FLIGHTCTL_VERSION.zip" "dist/flightctl-$FLIGHTCTL_VERSION"
+        echo "ASSET=flightctl-$FLIGHTCTL_VERSION.zip" >> $GITHUB_ENV
+
+    - name: Upload release archive
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ${{ env.ASSET }}
+        asset_name: ${{ env.ASSET }}
+        asset_content_type: application/octet-stream
