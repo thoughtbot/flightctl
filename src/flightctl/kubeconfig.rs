@@ -1,11 +1,18 @@
+use super::config::Context;
 use super::kubectl;
+use kube::config::Kubeconfig;
 
-pub fn context_exists(name: &str) -> anyhow::Result<bool> {
-    let result = kubectl::run_get_output(&["config", "get-contexts", "--output", "name"])?;
-    let output = String::from_utf8(result.stdout)?;
-    Ok(output
-        .lines()
-        .find(|line| line.trim_end() == name)
+pub fn context_exists(context: &Context) -> anyhow::Result<bool> {
+    let config = Kubeconfig::read()?;
+    Ok(config
+        .contexts
+        .into_iter()
+        .find(|named_context| {
+            &named_context.name == &context.name
+                && &named_context.context.cluster == &context.cluster
+                && &named_context.context.user == &context.name
+                && named_context.context.namespace.as_deref() == Some(&context.namespace)
+        })
         .is_some())
 }
 

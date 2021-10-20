@@ -6,12 +6,12 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 
 pub fn prepare(config: &Config, release: &Release) -> anyhow::Result<()> {
-    let context_exists = kubeconfig::context_exists(&release.context)?;
+    let context = config.find_context(&release)?;
+    let context_exists = kubeconfig::context_exists(&context)?;
 
     if context_exists {
         Ok(())
     } else {
-        let context = config.find_context(&release)?;
         create_context(&context, &config)
     }
 }
@@ -22,7 +22,7 @@ fn create_context(context: &Context, config: &Config) -> anyhow::Result<()> {
     eprintln!("Creating Kubernetes context: {}", context.name);
     kubeconfig::create_context(
         &context.name,
-        &context.auth,
+        &context.name,
         &context.cluster,
         &context.namespace,
     )
