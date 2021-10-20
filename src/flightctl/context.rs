@@ -29,27 +29,27 @@ fn create_context(context: &Context, config: &Config) -> anyhow::Result<()> {
 }
 
 fn ensure_auth(context: &Context, config: &Config) -> anyhow::Result<()> {
-    let exists = kubeconfig::auth_exists(&context.auth)?;
+    let exists = kubeconfig::auth_exists(&context.name)?;
 
     if exists {
         Ok(())
     } else {
         let auth = config.find_auth(context)?;
         let cluster = config.find_cluster(context)?;
-        create_auth(auth, cluster)
+        create_auth(context, auth, cluster)
     }
 }
 
-fn create_auth(auth: &Auth, cluster: &Cluster) -> anyhow::Result<()> {
+fn create_auth(context: &Context, auth: &Auth, cluster: &Cluster) -> anyhow::Result<()> {
     match auth.config {
         AuthConfig::AwsSso { .. } => match &cluster.config {
             ClusterConfig::Eks { name, region } => {
                 eprintln!(
                     "Setting Kubernetes credentials for EKS cluster: {} as {} in {}",
-                    name, auth.name, region
+                    name, context.name, region
                 );
                 kubeconfig::create_auth(
-                    &auth.name,
+                    &context.name,
                     &[
                         "--exec-api-version",
                         "client.authentication.k8s.io/v1alpha1",
