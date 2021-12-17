@@ -1,19 +1,24 @@
 use super::config::Context;
 use super::kubectl;
-use kube::config::Kubeconfig;
+use kube::config::{Kubeconfig, KubeconfigError};
 
 pub fn context_exists(context: &Context) -> anyhow::Result<bool> {
-    let config = Kubeconfig::read()?;
-    Ok(config
-        .contexts
-        .into_iter()
-        .find(|named_context| {
-            &named_context.name == &context.name
-                && &named_context.context.cluster == &context.cluster
-                && &named_context.context.user == &context.name
-                && named_context.context.namespace.as_deref() == Some(&context.namespace)
-        })
-        .is_some())
+    match Kubeconfig::read() {
+        Ok(config) => anyhow::Ok(
+            config
+                .contexts
+                .into_iter()
+                .find(|named_context| {
+                    &named_context.name == &context.name
+                        && &named_context.context.cluster == &context.cluster
+                        && &named_context.context.user == &context.name
+                        && named_context.context.namespace.as_deref() == Some(&context.namespace)
+                })
+                .is_some(),
+        ),
+        Err(KubeconfigError::ReadConfig { .. }) => anyhow::Ok(false),
+        Err(err) => Err(anyhow::anyhow!(err)),
+    }
 }
 
 pub fn create_context(
