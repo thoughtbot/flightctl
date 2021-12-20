@@ -32,7 +32,11 @@ impl KubeClient {
             "--output",
             "name",
         ])?;
-        let pod_name = String::from_utf8(output.stdout)?;
+        let pod_names = String::from_utf8(output.stdout)?;
+        let pod_name = pod_names
+            .split_whitespace()
+            .nth(0)
+            .ok_or(anyhow::Error::msg("No console pod found"))?;
         let pod = self.fetch_resource(&pod_name.trim_end())?;
         Ok(pod)
     }
