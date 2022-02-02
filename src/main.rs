@@ -1,4 +1,6 @@
+use env_logger;
 use flightctl::{Config, ConfigFile, Release, Selector};
+use log;
 use structopt::StructOpt;
 
 mod commands;
@@ -82,10 +84,18 @@ fn preflight<'a>(
     opt: &Opt,
     selector: &Selector,
 ) -> anyhow::Result<&'a Release> {
+    log::debug!("Beginning preflight");
     let release = opt.selector.merge(selector).apply(&config)?;
     flightctl::authorize::run(&config, &release)?;
     flightctl::context::prepare(&config, &release)?;
+    log::debug!("Preflight complete");
     Ok(release)
+}
+
+fn init_logger(default: &str) {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(default))
+        .format_timestamp(None)
+        .init();
 }
 
 fn main() -> anyhow::Result<()> {
@@ -94,9 +104,15 @@ fn main() -> anyhow::Result<()> {
     let config = config_file.config;
 
     if opt.debug {
-        println!("Loaded configuration from {}:", config_file.path.display());
-        println!("{:?}", config);
-        println!("Running command: {:?}", opt.cmd);
+        init_logger("debug");
+    } else {
+        init_logger("info");
+    }
+
+    if log::log_enabled!(log::Level::Debug) {
+        log::debug!("Loaded configuration from {}:", config_file.path.display());
+        log::debug!("{:?}", config);
+        log::debug!("Parsed command: {:?}", opt.cmd);
     }
 
     match opt.cmd {

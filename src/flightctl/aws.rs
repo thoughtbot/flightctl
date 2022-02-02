@@ -1,3 +1,4 @@
+use log;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::process::{Command, ExitStatus, Output};
@@ -18,7 +19,7 @@ pub fn profile_exists(profile: &str) -> anyhow::Result<bool> {
 }
 
 pub fn create_profile(profile: &str, config: &HashMap<String, String>) -> anyhow::Result<()> {
-    eprintln!("Creating AWS profile: {}", profile);
+    log::info!("Creating AWS profile: {}", profile);
 
     for (key, value) in config.iter() {
         run_aws_cli(&["--profile", profile, "configure", "set", key, value])?;
@@ -32,7 +33,7 @@ pub fn verify_auth(profile: &str) -> anyhow::Result<()> {
 }
 
 pub fn sso_login(profile: &str) -> anyhow::Result<()> {
-    eprintln!("Logging in for AWS profile {}", profile);
+    log::info!("Logging in for AWS profile {}", profile);
     let args = ["--profile", profile, "sso", "login"];
     let mut child = aws_cli(&args).spawn()?;
     let status = child.wait()?;

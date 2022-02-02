@@ -1,3 +1,4 @@
+use log;
 use std::process::{Command, ExitStatus, Output};
 
 pub fn run_get_output(args: &[&str]) -> anyhow::Result<Output> {
@@ -17,12 +18,14 @@ pub fn run_print(args: &[&str]) -> anyhow::Result<()> {
 }
 
 fn run(args: &[&str]) -> Command {
+    log::debug!("Running kubectl with {:?}", args);
     let mut command = Command::new("kubectl");
     command.args(args);
     command
 }
 
 fn verify_exit(args: &[&str], status: ExitStatus) -> anyhow::Result<()> {
+    log::debug!("kubectl exited with {}", status);
     if status.success() {
         Ok(())
     } else {
