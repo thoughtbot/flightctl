@@ -21,6 +21,13 @@ struct Opt {
 
 #[derive(Debug, StructOpt)]
 enum Command {
+    /// Run an AWS CLI command for a release
+    Aws {
+        cmd: Vec<String>,
+        #[structopt(flatten)]
+        selector: Selector,
+    },
+
     /// Fetch configuration variables for a release
     Config {
         #[structopt(flatten)]
@@ -116,6 +123,13 @@ fn main() -> anyhow::Result<()> {
     }
 
     match opt.cmd {
+        Some(Command::Aws {
+            ref cmd,
+            ref selector,
+        }) => {
+            let release = preflight(&config, &opt, &selector)?;
+            commands::aws::run(&config, release, cmd)
+        }
         Some(Command::Config { ref selector }) => {
             let release = preflight(&config, &opt, &selector)?;
             commands::config::print(&config, release)

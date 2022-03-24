@@ -40,6 +40,12 @@ pub fn sso_login(profile: &str) -> anyhow::Result<()> {
     verify_exit(&args, status)
 }
 
+pub fn run_cli_print(args: &[&str]) -> anyhow::Result<()> {
+    let mut child = aws_cli(&args).spawn()?;
+    let status = child.wait()?;
+    verify_exit(&args, status)
+}
+
 pub fn get_eks_cluster(profile: &str, region: &str, name: &str) -> anyhow::Result<EksCluster> {
     let output = run_aws_cli(&[
         "--profile",
@@ -68,6 +74,7 @@ fn run_aws_cli(args: &[&str]) -> anyhow::Result<Output> {
 }
 
 fn aws_cli(args: &[&str]) -> Command {
+    log::debug!("Running AWS CLI with {:?}", args);
     let mut command = Command::new("aws");
     command.args(args);
     command
