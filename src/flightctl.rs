@@ -5,7 +5,7 @@ pub mod authorize;
 pub mod aws;
 pub mod context;
 pub mod kubeclient;
-pub mod kubeconfig;
+pub mod kubeconfig_writer;
 pub mod kubectl;
 pub mod kubeenv;
 
