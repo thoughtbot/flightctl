@@ -137,7 +137,7 @@ fn build_auth(context: &Context, auth: &Auth, cluster: &Cluster) -> NamedAuthInf
                 env.insert(String::from("value"), auth.name.clone());
 
                 result.exec = Some(ExecConfig {
-                    api_version: Some(String::from("client.authentication.k8s.io/v1alpha1")),
+                    api_version: Some(String::from("client.authentication.k8s.io/v1beta1")),
                     args: Some(vec![
                         String::from("--region"),
                         region.to_string(),
