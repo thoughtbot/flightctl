@@ -10,7 +10,7 @@ In order to use `flightctl` commands to access the workspace, you will need the 
 
 Copy `setup.sh` from `/templates` into your application codebase. We recommend storing it in a `bin/` directory.
 
-TODO: Add descriptions
+The first time the `flightctl` command is used, the script will download the compiled asset for your operating system into your project's `/tmp` directory. Every other time going forward, the command will execute the downloaded binary.
 
 ## Configurations yaml
 
