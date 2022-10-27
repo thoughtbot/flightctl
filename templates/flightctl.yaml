@@ -1,0 +1,52 @@
+# Fill in each variable below with real values
+
+apiVersion: flightctl.thoughtbot.com/v1beta1
+kind: Workspace
+releases:
+- name: {release-name}
+  application: {application-name}
+  context: {release-name}
+  environment: {environments}
+  manifests:
+    path: {manifests-path}
+applications:
+- name: {application-name}
+  manifests:
+    provider: kustomize
+    repo: {manifest-repo}
+  provider: kubectl
+  params:
+    selector:
+      {selector-key: selector-value}
+    console:
+      provider: exec
+      params:
+        selector:
+          {console-selector-key: console-selector-value}
+        container: main
+        command:
+        - bundle
+        - exec
+        - rails
+        - console
+contexts:
+- name: {release-name}
+  cluster: {cluster-name}
+  namespace: {namespace}
+  auth: {authentication-name}
+clusters:
+- name: {cluster-name}
+  auth: {authentication-name}
+  provider: eks
+  params:
+    name: {cluster-name}
+    region: {aws-region}
+auth:
+- name: {authentication-name}
+  provider: aws-sso
+  params:
+    region: {aws-region}
+    sso_account_id: {account-id}
+    sso_region: {aws-region}
+    sso_role_name: AWSPowerUserAccess
+    sso_start_url: {aws-sso-url}

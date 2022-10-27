@@ -2,6 +2,20 @@
 
 Client for interacting with Mission Control workspaces.
 
+# How to Use
+
+In order to use `flightctl` commands to access the workspace, you will need the files in the `/templates` directory: the setup binary (`setup.sh`) and the configurations yaml (`flightctl.yaml`).
+
+## Setup script
+
+Copy `setup.sh` from `/templates` into your application codebase. We recommend storing it in a `bin/` directory.
+
+The first time the `flightctl` command is used, the script will download the compiled asset for your operating system into your project's `/tmp` directory. Every other time going forward, the command will execute the downloaded binary.
+
+## Configurations yaml
+
+Copy the configurations template `flightctl.yaml` into your application root directory. Be sure to replace each variable interpolation with real values for your workspace.
+
 ## User Commands
 
 ```
