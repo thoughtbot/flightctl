@@ -39,12 +39,12 @@ jobs:
         - windows
         include:
         - build: linux-x86_64
-          os: ubuntu-18.04
+          os: ubuntu-22.04
           toolchain: stable
           target: x86_64-unknown-linux-musl
           arch: x86_64
         - build: linux-aarch64
-          os: ubuntu-18.04
+          os: ubuntu-22.04
           toolchain: stable
           target: aarch64-unknown-linux-musl
           arch: aarch64
