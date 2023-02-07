@@ -53,9 +53,14 @@ fn ensure_context(config: &Kubeconfig, expected: &Context) -> anyhow::Result<()>
         .iter()
         .find(|actual| {
             &actual.name == &expected.name
-                && &actual.context.cluster == &expected.cluster
-                && &actual.context.user == &expected.name
-                && actual.context.namespace.as_deref() == Some(&expected.namespace)
+                && match &actual.context {
+                    Some(context) => {
+                        &context.cluster == &expected.cluster
+                            && &context.user == &expected.name
+                            && context.namespace.as_deref() == Some(&expected.namespace)
+                    }
+                    None => false,
+                }
         })
         .is_some();
 
@@ -76,25 +81,27 @@ fn ensure_context(config: &Kubeconfig, expected: &Context) -> anyhow::Result<()>
 fn ensure_auth(config: &Kubeconfig, expected: NamedAuthInfo) -> anyhow::Result<()> {
     log::debug!("Checking Kubernetes credentials for {}", &expected.name);
 
-    let exists = config
-        .auth_infos
-        .iter()
-        .find(|actual| {
-            expected.name == actual.name
-                && expected.auth_info.client_certificate_data
-                    == actual.auth_info.client_certificate_data
-                && expected
-                    .auth_info
-                    .exec
-                    .as_ref()
-                    .map(|exec| (&exec.api_version, &exec.args, &exec.command, &exec.args))
-                    == actual
-                        .auth_info
-                        .exec
-                        .as_ref()
-                        .map(|exec| (&exec.api_version, &exec.args, &exec.command, &exec.args))
-        })
-        .is_some();
+    let exists =
+        config
+            .auth_infos
+            .iter()
+            .find(|actual| {
+                expected.name == actual.name
+                    && if let (Some(expected_auth_info), Some(actual_auth_info)) =
+                        (&expected.auth_info, &actual.auth_info)
+                    {
+                        expected_auth_info.client_certificate_data
+                            == actual_auth_info.client_certificate_data
+                            && expected_auth_info.exec.as_ref().map(|exec| {
+                                (&exec.api_version, &exec.args, &exec.command, &exec.args)
+                            }) == actual_auth_info.exec.as_ref().map(|exec| {
+                                (&exec.api_version, &exec.args, &exec.command, &exec.args)
+                            })
+                    } else {
+                        false
+                    }
+            })
+            .is_some();
 
     if exists {
         log::debug!("Using existing Kubernetes credentials");
@@ -146,8 +153,10 @@ fn build_auth(context: &Context, auth: &Auth, cluster: &Cluster) -> NamedAuthInf
                         String::from("--cluster-name"),
                         name.to_string(),
                     ]),
-                    command: String::from("aws"),
+                    command: Some(String::from("aws")),
+                    drop_env: None,
                     env: Some(vec![env]),
+                    interactive_mode: None,
                 })
             }
         },
@@ -155,7 +164,7 @@ fn build_auth(context: &Context, auth: &Auth, cluster: &Cluster) -> NamedAuthInf
 
     NamedAuthInfo {
         name: context.name.clone(),
-        auth_info: result,
+        auth_info: Some(result),
     }
 }
 
@@ -167,9 +176,15 @@ fn ensure_cluster(config: &Kubeconfig, expected: NamedCluster) -> anyhow::Result
         .iter()
         .find(|actual| {
             &actual.name == &expected.name
-                && &actual.cluster.server == &expected.cluster.server
-                && &actual.cluster.certificate_authority_data
-                    == &expected.cluster.certificate_authority_data
+                && if let (Some(actual_cluster), Some(expected_cluster)) =
+                    (&actual.cluster, &expected.cluster)
+                {
+                    actual_cluster.server == expected_cluster.server
+                        && actual_cluster.certificate_authority_data
+                            == expected_cluster.certificate_authority_data
+                } else {
+                    false
+                }
         })
         .is_some();
 
@@ -194,14 +209,15 @@ fn build_cluster(cluster: &Cluster, auth: &Auth) -> anyhow::Result<NamedCluster>
             let eks_cluster = aws::get_eks_cluster(&auth.name, region, name)?;
             Ok(NamedCluster {
                 name: cluster.name.clone(),
-                cluster: kube::config::Cluster {
+                cluster: Some(kube::config::Cluster {
                     certificate_authority: None,
                     certificate_authority_data: Some(eks_cluster.cert),
                     extensions: None,
                     insecure_skip_tls_verify: None,
                     proxy_url: None,
-                    server: eks_cluster.endpoint,
-                },
+                    server: Some(eks_cluster.endpoint),
+                    tls_server_name: None,
+                }),
             })
         }
     }
