@@ -1,5 +1,6 @@
 [package]
 name = "flightctl"
+# Version updates should also be added to templates/flightctl.sh
 version = "0.3.1"
 edition = "2021"
 

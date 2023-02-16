@@ -2,7 +2,7 @@
 
 set -e
 
-FLIGHTCTL_VERSION=0.2.1
+FLIGHTCTL_VERSION=0.3.1
 PREFIX=$(dirname "$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)")
 FLIGHTCTL_TMP="$PREFIX/tmp"
 FLIGHTCTL_BIN="$FLIGHTCTL_TMP/flightctl-$FLIGHTCTL_VERSION"
