@@ -1,6 +1,6 @@
 # flightctl
 
-Client for interacting with Mission Control workspaces.
+Client for interacting with thoughtbot workspaces.
 
 # How to Use
 
