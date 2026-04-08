@@ -4,11 +4,11 @@ Client for interacting with thoughtbot workspaces.
 
 # How to Use
 
-In order to use `flightctl` commands to access the workspace, you will need the files in the `/templates` directory: the setup binary (`setup.sh`) and the configurations yaml (`flightctl.yaml`).
+In order to use `flightctl` commands to access the workspace, you will need the files in the `/templates` directory: the setup binary (`flightctl.sh`) and the configurations yaml (`flightctl.yaml`).
 
 ## Setup script
 
-Copy `setup.sh` from `/templates` into your application codebase. We recommend storing it in a `bin/` directory.
+Copy `flightctl.sh` from `/templates` into your application codebase. We recommend storing it in a `bin/` directory.
 
 The first time the `flightctl` command is used, the script will download the compiled asset for your operating system into your project's `/tmp` directory. Every other time going forward, the command will execute the downloaded binary.
 
